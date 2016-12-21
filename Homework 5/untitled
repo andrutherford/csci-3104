@@ -1,0 +1,149 @@
+#A:dictionary G:graph D:list of alphagrams
+#I think this works
+import cPickle as pickle
+import copy 
+
+#loading sources into memory
+with open('sources_direct.txt', 'rb') as fp:
+  sorted_x = pickle.load(fp)
+
+fp.close()
+
+#loading DAG into memory 
+with open('graph.txt', 'rb') as f:
+  G = pickle.load(f)
+
+f.close()
+
+
+#sorted_x = ["v1","v3","v6"]
+#sorted_x = ["v1"]
+#sorted_x = ["v0", "v1", "v2", "v3"]
+
+
+starttime = {}
+endtime = {}
+A = {}
+
+#G = {"v1":["v2","v3"],"v2":[],"v3":["v2"]}
+#G = {"v1":["v2","v7"],"v2":[],"v3":["v2","v4"], "v4":["v5"], "v5":[], "v6":["v5","v7"], "v7":[]}
+#G = {"v1":["v2","v4"], "v2":["v3"],"v3":["v4"], "v4":[]}
+#G = {"v1": ["v2","v3"],"v2":["v6"],"v3":["v4","v5"],"v4":[],"v5":[],"v6":["v7"],"v7":[]}
+#G = {"v0":["v1"], "v1":["v4"],"v2":["v4","v6","v5"],"v3":["v4","v5"],"v4":["v8"],"v5":["v7"],"v6":["v8","v7"],"v7":["v9"],"v8":["v9"],"v9":[],"v10":["v7"],"v11":["v8"]}
+
+
+time = 0
+count = 0
+max_count = 0
+max_lst = [] 
+L = []
+
+d = {}
+parent = {} 
+max_d = 0 
+max_vx = None
+
+for vx in G.keys():
+	d[vx] = 0 
+	parent[vx] = None
+
+
+def previsit1(v):
+	global time
+	time = time + 1
+	starttime[v] = time
+
+
+def postvisit1(v):
+	global time
+	time = time + 1
+	endtime[v] = time
+
+
+def explore1(G,v):
+	A[v] = True
+	#push vx on stack in previsit
+	previsit1(v)
+	value = G[v]
+
+	for u in value:
+		if A[u] == False:
+			explore1(G,u)
+	
+	postvisit1(v)
+	
+
+
+def dfs1(G):
+	
+	node = 0
+	global sorted_x
+	global max_d
+	global max_vx 
+  
+	for vx in sorted_x:
+		node += 1
+		print "node no. started :: ", node
+		 
+		#marking unvisited for each source node
+		for v in G:
+			A[v] = False
+
+		if A[vx] == False:
+			explore1(G,vx)
+		
+		#topological sort 
+		import operator
+		sorted_x = sorted(endtime.items(), key=operator.itemgetter(1), reverse=True)
+		#print "original sorted x" , sorted_x
+	
+		#Longest path DAG
+		#dist = {} 
+		#parent = {} 
+ 
+		#for vx in G.keys():
+		#	dist[vx] = 0 
+		#	parent[vx] = None
+
+		d[vx] = 0   #source dist 0 
+		
+		for tup in sorted_x: 
+			u = tup[0]
+			for v in G[u]:
+				if d[v] < d[u] + 1:
+					d[v] = d[u] + 1 
+					parent[v] = u
+
+		#sorted_d = sorted(d.items(), key=operator.itemgetter(1), reverse=True)
+		#temp_d = sorted_d[0][1]
+		#temp_vx = sorted_d[0][0]
+		
+		#if max_d < temp_d:
+		#	max_d = temp_d 
+		#	max_vx = temp_vx 
+
+	sorted_d = sorted(d.items(), key=operator.itemgetter(1), reverse=True)
+	max_d = sorted_d[0][1]
+	max_vx = sorted_d[0][0]
+		 	 
+				
+			
+			
+dfs1(G)
+#print "max_count:" , max_count - 1 , max_lst
+
+print "max_d:: ", max_d, max_vx 
+
+print "print longest chain"
+def print_chain(vx):
+	print vx 
+	v = parent[vx]
+
+	if v == None:
+		return 0
+		#print parent[vx]
+	else: 
+		#print v
+		return print_chain(v)
+
+print_chai
